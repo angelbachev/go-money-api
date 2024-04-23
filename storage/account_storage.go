@@ -12,6 +12,7 @@ type AccountStore interface {
 	CreateAccount(account *models.Account) error
 	GetAccountByID(userID, accountID int64) (*models.Account, error)
 	GetAccounts(userID int64) ([]*models.Account, error)
+	DeleteAccount(id int64) error
 }
 
 func (s MySQLStore) CreateAccount(account *models.Account) error {
@@ -95,4 +96,14 @@ func (s MySQLStore) GetAccounts(userID int64) ([]*models.Account, error) {
 		accounts = append(accounts, &account)
 	}
 	return accounts, nil
+}
+
+func (s MySQLStore) DeleteAccount(id int64) error {
+	query := "DELETE FROM accounts WHERE id = ?"
+	_, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -59,13 +59,16 @@ func (s Server) router() http.Handler {
 
 		r.Post("/accounts", s.handleCreateAccount)
 		r.Get("/accounts", s.handleListAccounts)
+		r.Delete("/accounts/{accountID}", s.handleDeleteAccount)
 
 		r.Post("/accounts/{accountID}/categories", s.handleCreateCategory)
 		r.Get("/accounts/{accountID}/categories", s.handleListCategories)
 		r.Get("/accounts/{accountID}/categories/{categoryID}", s.handleGetCategory)
+		r.Delete("/accounts/{accountID}/categories/{categoryID}", s.handleDeleteCategory)
 
 		r.Post("/accounts/{accountID}/expenses", s.handleCreateExpense)
 		r.Get("/accounts/{accountID}/expenses", s.handleListExpenses)
+		r.Delete("/accounts/{accountID}/expenses/{expenseID}", s.handleDeleteExpense)
 	})
 
 	// Public routes
@@ -93,6 +96,10 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 }
 
 func getBody(r *http.Request, data interface{}) error {
+	// var f interface{}
+	// json.NewDecoder(r.Body).Decode(&f)
+
+	// fmt.Printf("form: %+v", f)
 	return json.NewDecoder(r.Body).Decode(&data)
 }
 
@@ -175,6 +182,61 @@ func (s Server) handleListAccounts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, accounts)
 }
 
+func (s Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	_, err = s.store.GetAccountByID(userID, accountID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	categoryIDs, err := s.store.GetCategories(accountID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// TODO: handle subcategories
+
+	filters := &models.ExpenseFilters{
+		CategoryIDs: categoryIDs,
+	}
+
+	// TODO: validate that the user owns the account and category
+
+	expenses, err := s.store.GetExpenses(userID, accountID, filters)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	q := r.URL.Query()
+	force, _ := strconv.ParseInt(q.Get("force"), 10, 0)
+	if force == 0 && (len(categoryIDs) > 1 || len(expenses) > 0) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "Account is not empty"})
+		return
+	}
+
+	for _, exp := range expenses {
+		s.store.DeleteExpense(exp.ID)
+	}
+
+	for _, cat := range categoryIDs {
+		s.store.DeleteCategory(cat)
+	}
+
+	s.store.DeleteAccount(accountID)
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 	userID := getAuthUserID(r)
 
@@ -240,6 +302,59 @@ func (s Server) handleGetCategory(w http.ResponseWriter, r *http.Request) {
 	// TODO: validate account
 
 	writeJSON(w, http.StatusOK, category)
+}
+
+func (s Server) handleDeleteCategory(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	categoryID, err := strconv.ParseInt(chi.URLParam(r, "categoryID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	categoryIDs, err := s.store.GetListCategoryIDsAndTheirSubcategories([]int64{categoryID})
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// TODO: handle subcategories
+
+	filters := &models.ExpenseFilters{
+		CategoryIDs: categoryIDs,
+	}
+
+	// TODO: validate that the user owns the account and category
+
+	expenses, err := s.store.GetExpenses(userID, accountID, filters)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	q := r.URL.Query()
+	force, _ := strconv.ParseInt(q.Get("force"), 10, 0)
+	if force == 0 && (len(categoryIDs) > 1 || len(expenses) > 0) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "Category is not empty"})
+		return
+	}
+
+	for _, exp := range expenses {
+		s.store.DeleteExpense(exp.ID)
+	}
+
+	for _, cat := range categoryIDs {
+		s.store.DeleteCategory(cat)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
@@ -308,10 +423,13 @@ func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 
 		categories = append(categories, ct)
 	}
-	categoryIDs, err := s.store.GetListCategoryIDsAndTheirSubcategories(categories)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, err.Error())
-		return
+	var categoryIDs []int64
+	if len(categories) > 0 {
+		categoryIDs, err = s.store.GetListCategoryIDsAndTheirSubcategories(categories)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 
 	// TODO: handle subcategories
@@ -334,8 +452,36 @@ func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, expenses)
 }
 
-// TODO: delete expense
-// TODO: delete
+func (s Server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	expenseID, err := strconv.ParseInt(chi.URLParam(r, "expenseID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	// TODO: validate that the user owns the account and category
+
+	_, err = s.store.GetExpenseByID(userID, accountID, expenseID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	if err := s.store.DeleteExpense(expenseID); err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
 
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.

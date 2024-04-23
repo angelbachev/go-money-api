@@ -27,9 +27,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/users",
+							"raw": "{{baseApiUrl}}/users",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"users"
@@ -71,9 +71,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/auth/tokens",
+							"raw": "{{baseApiUrl}}/auth/tokens",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"auth",
@@ -99,9 +99,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_api_url}}/auth/tokens",
+							"raw": "{{baseApiUrl}}/auth/tokens",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"auth",
@@ -117,7 +117,7 @@
 			"name": "Accounts",
 			"item": [
 				{
-					"name": "Create an account",
+					"name": "Create account",
 					"event": [
 						{
 							"listen": "test",
@@ -154,9 +154,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/accounts",
+							"raw": "{{baseApiUrl}}/accounts",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts"
@@ -181,12 +181,49 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_api_url}}/accounts",
+							"raw": "{{baseApiUrl}}/accounts",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"force\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}"
 							]
 						}
 					},
@@ -198,7 +235,20 @@
 			"name": "Categories",
 			"item": [
 				{
-					"name": "Create a category",
+					"name": "Create category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"pm.collectionVariables.set(\"categoryId\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -222,9 +272,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/accounts/{{accountId}}/categories",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/categories",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts",
@@ -251,9 +301,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_api_url}}/accounts/{{accountId}}/categories",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/categories",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts",
@@ -280,15 +330,51 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_api_url}}/accounts/{{accountId}}/categories/{{categoryId}}",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/categories/{{categoryId}}",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts",
 								"{{accountId}}",
 								"categories",
 								"{{categoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/categories/{{categoryId}}?force=1",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"categories",
+								"{{categoryId}}"
+							],
+							"query": [
+								{
+									"key": "force",
+									"value": "1"
+								}
 							]
 						}
 					},
@@ -300,7 +386,20 @@
 			"name": "Expenses",
 			"item": [
 				{
-					"name": "Create an expense",
+					"name": "Create expense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"pm.collectionVariables.set(\"expenseId\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -324,12 +423,12 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/account/{{accountId}}/expenses",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
-								"account",
+								"accounts",
 								"{{accountId}}",
 								"expenses"
 							]
@@ -365,9 +464,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_api_url}}/accounts/{{accountId}}/expenses?maxDate=2024-04-20T16:42:01Z&minAmount=100&maxAmount=10&test[]=1&test[]=2",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses?maxDate=2025-04-20T16:42:01Z&minAmount=200&maxAmount=100000&minDate=2023-04-20T16:42:01Z&categoryIds[]=2&categoryIds[]=4",
 							"host": [
-								"{{base_api_url}}"
+								"{{baseApiUrl}}"
 							],
 							"path": [
 								"accounts",
@@ -376,30 +475,59 @@
 							],
 							"query": [
 								{
-									"key": "minDate",
-									"value": "2025-04-20T16:42:01Z",
-									"disabled": true
-								},
-								{
 									"key": "maxDate",
-									"value": "2024-04-20T16:42:01Z"
+									"value": "2025-04-20T16:42:01Z"
 								},
 								{
 									"key": "minAmount",
-									"value": "100"
+									"value": "200"
 								},
 								{
 									"key": "maxAmount",
-									"value": "10"
+									"value": "100000"
 								},
 								{
-									"key": "test[]",
-									"value": "1"
+									"key": "minDate",
+									"value": "2023-04-20T16:42:01Z"
 								},
 								{
-									"key": "test[]",
+									"key": "categoryIds[]",
 									"value": "2"
+								},
+								{
+									"key": "categoryIds[]",
+									"value": "4"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete expense",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses/{{expenseId}}",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"expenses",
+								"{{expenseId}}"
 							]
 						}
 					},
@@ -413,9 +541,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/files/api.yml",
+					"raw": "{{baseUrl}}/files/api.yml",
 					"host": [
-						"{{base_url}}"
+						"{{baseUrl}}"
 					],
 					"path": [
 						"files",
@@ -450,17 +578,17 @@
 	],
 	"variable": [
 		{
-			"key": "base_url",
+			"key": "baseUrl",
 			"value": "http://localhost:8089",
 			"type": "string"
 		},
 		{
-			"key": "base_api_url",
-			"value": "{{base_url}}/api",
+			"key": "baseApiUrl",
+			"value": "{{baseUrl}}/api",
 			"type": "string"
 		},
 		{
-			"key": "auth_token",
+			"key": "authToken",
 			"value": "",
 			"type": "string"
 		},
@@ -473,6 +601,14 @@
 			"key": "categoryId",
 			"value": "2",
 			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": ""
+		},
+		{
+			"key": "expenseId",
+			"value": ""
 		}
 	]
 }

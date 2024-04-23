@@ -11,11 +11,12 @@ import (
 
 type CategoryStore interface {
 	CreateCategory(cateory *models.Category) error
-	GetCategories(userID, accountID int64) ([]*models.Category, error)
+	GetCategories(accountID int64) ([]int64, error)
 	GetCategoryByID(id int64) (*models.Category, error)
 	GetCategoryTree(accountID int64) (*models.CategoryTree, error)
 	GetSingleCategoryTree(id int64) (*models.CategoryTree, error)
 	GetListCategoryIDsAndTheirSubcategories(ids []int64) ([]int64, error)
+	DeleteCategory(id int64) error
 }
 
 func (s MySQLStore) CreateCategory(category *models.Category) error {
@@ -47,9 +48,9 @@ func (s MySQLStore) CreateCategory(category *models.Category) error {
 	return nil
 }
 
-func (s MySQLStore) GetCategories(userID, accountID int64) ([]*models.Category, error) {
-	query := `SELECT * FROM categories WHERE user_id = ? AND account_id = ? ORDER BY name ASC`
-	rows, err := s.db.Query(query, userID, accountID)
+func (s MySQLStore) GetCategories(accountID int64) ([]int64, error) {
+	query := `SELECT id FROM categories WHERE account_id = ?`
+	rows, err := s.db.Query(query, accountID)
 
 	if err != nil {
 		return nil, err
@@ -57,25 +58,16 @@ func (s MySQLStore) GetCategories(userID, accountID int64) ([]*models.Category, 
 
 	defer rows.Close()
 
-	categories := []*models.Category{}
+	categories := []int64{}
 	for rows.Next() {
-		var category models.Category
-		err = rows.Scan(
-			&category.ID,
-			&category.UserID,
-			&category.AccountID,
-			&category.ParentID,
-			&category.Name,
-			&category.Description,
-			&category.CreatedAt,
-			&category.UpdatedAt,
-		)
+		var category int64
+		err = rows.Scan(&category)
 
 		if err != nil {
 			return nil, err
 		}
 
-		categories = append(categories, &category)
+		categories = append(categories, category)
 	}
 	return categories, nil
 }
@@ -254,25 +246,19 @@ func buildTree(categories []*models.CategoryTree) *models.CategoryTree {
 		}
 		subtrees[cat.ID] = cat
 	}
-
+	fmt.Println("root", rootID)
 	// iterate over the list of categories
 	for idx, cat := range categories {
 
 		// if this is not the root node, it belongs to other category
-		if idx > 0 {
-
+		if idx > 0 && cat.ParentID > 0 {
 			// look up their immediate parent
 			subtree := subtrees[cat.ParentID]
-
 			// add them as a direct children
 			subtree.Children = append(subtree.Children, cat)
-
 		}
 
 	}
-
-	fmt.Printf("flat list: %v", categories)
-	fmt.Printf("nested list: %v", subtrees)
 
 	// At the end of the day, now, the tree is fully populated
 	// return the root node for the entire tree
@@ -297,4 +283,14 @@ func scanIntoCategory(row *sql.Row) (*models.Category, error) {
 	default:
 		return nil, err
 	}
+}
+
+func (s MySQLStore) DeleteCategory(id int64) error {
+	query := "DELETE FROM categories WHERE id = ?"
+	_, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

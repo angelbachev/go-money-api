@@ -11,6 +11,8 @@ import (
 type ExpenseStore interface {
 	CreateExpense(cateory *models.Expense) error
 	GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error)
+	GetExpenseByID(userID, accountID, expenseID int64) (*models.Expense, error)
+	DeleteExpense(id int64) error
 }
 
 func (s MySQLStore) CreateExpense(expense *models.Expense) error {
@@ -55,7 +57,6 @@ func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.Expense
 			date DESC, 
 			amount DESC
 	`
-
 	var filtersParts []string
 	var params = []any{userID, accountID}
 
@@ -131,4 +132,45 @@ func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.Expense
 		expenses = append(expenses, &expense)
 	}
 	return expenses, nil
+}
+
+func (s MySQLStore) GetExpenseByID(userID, accountID, expenseID int64) (*models.Expense, error) {
+	query := `
+	SELECT * 
+	FROM expenses 
+	WHERE 
+		user_id = ? 
+		AND account_id = ?
+		AND id = ?
+	LIMIT 1
+`
+	row := s.db.QueryRow(query, userID, accountID, expenseID)
+	var expense models.Expense
+	err := row.Scan(
+		&expense.ID,
+		&expense.UserID,
+		&expense.AccountID,
+		&expense.CategoryID,
+		&expense.Description,
+		&expense.Amount,
+		&expense.Date,
+		&expense.CreatedAt,
+		&expense.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &expense, nil
+}
+
+func (s MySQLStore) DeleteExpense(id int64) error {
+	query := "DELETE FROM expenses WHERE id = ?"
+	_, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
