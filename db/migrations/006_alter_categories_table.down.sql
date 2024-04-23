@@ -1,0 +1,1 @@
+ALTER TABLE `categories` CHANGE COLUMN `account_id` `budget_id` INT NOT NULL;

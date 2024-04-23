@@ -5,7 +5,7 @@ import "time"
 type Category struct {
 	ID          int64     `json:"id"`
 	UserID      int64     `json:"userId"`
-	BudgetID    int64     `json:"budgetId"`
+	AccountID   int64     `json:"-"`
 	ParentID    int64     `json:"categoryId"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
@@ -24,10 +24,10 @@ type CategoryTree struct {
 	Children    []*CategoryTree `json:"children"`
 }
 
-func NewCategory(userID, budgetID, parentID int64, name, description string) *Category {
+func NewCategory(userID, accountID, parentID int64, name, description string) *Category {
 	return &Category{
 		UserID:      userID,
-		BudgetID:    budgetID,
+		AccountID:   accountID,
 		ParentID:    parentID,
 		Name:        name,
 		Description: description,

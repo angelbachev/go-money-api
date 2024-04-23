@@ -10,6 +10,7 @@ require (
 	github.com/go-chi/jwtauth/v5 v5.3.1 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/gorilla/schema v1.3.0 // indirect
 	github.com/guregu/null/v5 v5.0.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect

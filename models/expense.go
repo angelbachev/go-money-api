@@ -5,7 +5,7 @@ import "time"
 type Expense struct {
 	ID          int64     `json:"id"`
 	UserID      int64     `json:"userId"`
-	BudgetID    int64     `json:"budgetId"`
+	AccountID   int64     `json:"-"`
 	CategoryID  int64     `json:"categoryId"`
 	Description string    `json:"description"`
 	Amount      int64     `json:"amount"`
@@ -14,10 +14,18 @@ type Expense struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-func NewExpense(userID, budgetID, categoryID int64, description string, amount int64, date time.Time) *Expense {
+type ExpenseFilters struct {
+	MinAmount   *int64
+	MaxAmount   *int64
+	MinDate     *time.Time
+	MaxDate     *time.Time
+	CategoryIDs []int64
+}
+
+func NewExpense(userID, accountID, categoryID int64, description string, amount int64, date time.Time) *Expense {
 	return &Expense{
 		UserID:      userID,
-		BudgetID:    budgetID,
+		AccountID:   accountID,
 		CategoryID:  categoryID,
 		Description: description,
 		Amount:      amount,

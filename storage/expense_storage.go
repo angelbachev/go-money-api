@@ -1,24 +1,27 @@
 package storage
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/angelbachev/go-money-api/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type ExpenseStore interface {
 	CreateExpense(cateory *models.Expense) error
-	GetExpenses(userID, budgetID int64) ([]*models.Expense, error)
+	GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error)
 }
 
 func (s MySQLStore) CreateExpense(expense *models.Expense) error {
 	query := `
-	INSERT INTO expenses (user_id, budget_id, category_id, description, amount, date, created_at, updated_at)
+	INSERT INTO expenses (user_id, account_id, category_id, description, amount, date, created_at, updated_at)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := s.db.Exec(
 		query,
 		expense.UserID,
-		expense.BudgetID,
+		expense.AccountID,
 		expense.CategoryID,
 		expense.Description,
 		expense.Amount,
@@ -40,9 +43,65 @@ func (s MySQLStore) CreateExpense(expense *models.Expense) error {
 	return nil
 }
 
-func (s MySQLStore) GetExpenses(userID, budgetID int64) ([]*models.Expense, error) {
-	query := `SELECT * FROM expenses WHERE user_id = ? AND budget_id = ? ORDER BY date DESC, amount DESC`
-	rows, err := s.db.Query(query, userID, budgetID)
+func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error) {
+	query := `
+		SELECT * 
+		FROM expenses 
+		WHERE 
+			user_id = ? 
+			AND account_id = ?
+			%s
+		ORDER BY 
+			date DESC, 
+			amount DESC
+	`
+
+	var filtersParts []string
+	var params = []any{userID, accountID}
+
+	if filters != nil {
+		if filters.MinAmount != nil {
+			filtersParts = append(filtersParts, "amount >= ?")
+			params = append(params, *filters.MinAmount)
+		}
+
+		if filters.MaxAmount != nil {
+			filtersParts = append(filtersParts, "amount <= ?")
+			params = append(params, *filters.MaxAmount)
+		}
+
+		if filters.MinDate != nil {
+			filtersParts = append(filtersParts, "date >= ?")
+			params = append(params, *filters.MinDate)
+		}
+
+		if filters.MaxDate != nil {
+			filtersParts = append(filtersParts, "date <= ?")
+			params = append(params, *filters.MaxDate)
+		}
+
+		if len(filters.CategoryIDs) > 0 {
+			categoriesClause := "category_id IN ("
+
+			for idx, ct := range filters.CategoryIDs {
+				params = append(params, ct)
+				if idx == 0 {
+					categoriesClause += "?"
+				} else {
+					categoriesClause += ", ?"
+				}
+			}
+			categoriesClause += ")"
+			filtersParts = append(filtersParts, categoriesClause)
+		}
+	}
+
+	var filterClause string
+	if len(filtersParts) > 0 {
+		filterClause = " AND " + strings.Join(filtersParts, " AND ")
+	}
+	query = fmt.Sprintf(query, filterClause)
+	rows, err := s.db.Query(query, params...)
 
 	if err != nil {
 		return nil, err
@@ -56,7 +115,7 @@ func (s MySQLStore) GetExpenses(userID, budgetID int64) ([]*models.Expense, erro
 		err = rows.Scan(
 			&expense.ID,
 			&expense.UserID,
-			&expense.BudgetID,
+			&expense.AccountID,
 			&expense.CategoryID,
 			&expense.Description,
 			&expense.Amount,

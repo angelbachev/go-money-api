@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/angelbachev/go-money-api/models"
 	"github.com/angelbachev/go-money-api/storage"
@@ -53,23 +57,30 @@ func (s Server) router() http.Handler {
 		// and tweak it, its not scary.
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
-		r.Post("/budgets", s.handleCreateBudget)
+		r.Post("/accounts", s.handleCreateAccount)
+		r.Get("/accounts", s.handleListAccounts)
 
-		r.Post("/budgets/{budgetID}/categories", s.handleCreateCategory)
-		r.Get("/budgets/{budgetID}/categories", s.handleListCategories)
+		r.Post("/accounts/{accountID}/categories", s.handleCreateCategory)
+		r.Get("/accounts/{accountID}/categories", s.handleListCategories)
+		r.Get("/accounts/{accountID}/categories/{categoryID}", s.handleGetCategory)
 
-		r.Post("/budgets/{budgetID}/expenses", s.handleCreateExpense)
-		r.Get("/budgets/{budgetID}/expenses", s.handleListExpenses)
+		r.Post("/accounts/{accountID}/expenses", s.handleCreateExpense)
+		r.Get("/accounts/{accountID}/expenses", s.handleListExpenses)
 	})
 
 	// Public routes
 	apiRouter.Group(func(r chi.Router) {
-		r.Post("/register", s.handleRegisterUser)
-		r.Post("/login", s.handleLoginUser)
+		r.Post("/users", s.handleRegisterUser)
+		r.Post("/auth/tokens", s.handleLoginUser)
 	})
 
 	// Mounting the new Sub Router on the main router
 	r.Mount("/api", apiRouter)
+
+	workDir, _ := os.Getwd()
+	filesDir := http.Dir(filepath.Join(workDir, "docs"))
+	fmt.Println(filesDir)
+	FileServer(r, "/files", filesDir)
 
 	return r
 }
@@ -137,19 +148,31 @@ func (s Server) handleLoginUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]string{"token": createJWT(user.ID)})
 }
 
-func (s Server) handleCreateBudget(w http.ResponseWriter, r *http.Request) {
+func (s Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 	userID := getAuthUserID(r)
 
-	var req CreateBudgetRequest
+	var req CreateAccountRequest
 	if err := getBody(r, &req); err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	budget := models.NewBudget(userID, req.Name, req.Description)
+	account := models.NewAccount(userID, req.Name, req.Description, req.CurrencyCode)
 
-	s.store.CreateBudget(budget)
-	writeJSON(w, http.StatusCreated, budget)
+	s.store.CreateAccount(account)
+	writeJSON(w, http.StatusCreated, account)
+}
+
+func (s Server) handleListAccounts(w http.ResponseWriter, r *http.Request) {
+	// TODO: validate userID
+	userID := getAuthUserID(r)
+
+	accounts, err := s.store.GetAccounts(userID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, accounts)
 }
 
 func (s Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
@@ -161,13 +184,13 @@ func (s Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	budgetID, err := strconv.ParseInt(chi.URLParam(r, "budgetID"), 10, 0)
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	category := models.NewCategory(userID, budgetID, req.ParentID, req.Name, req.Description)
+	category := models.NewCategory(userID, accountID, req.ParentID, req.Name, req.Description)
 
 	s.store.CreateCategory(category)
 	writeJSON(w, http.StatusCreated, category)
@@ -177,19 +200,46 @@ func (s Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
 	// TODO: validate userID
 	// userID := getAuthUserID(r)
 
-	budgetID, err := strconv.ParseInt(chi.URLParam(r, "budgetID"), 10, 0)
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// categories, err := s.store.GetCategories(userID, budgetID)
-	categories, err := s.store.GetCategoryTree(budgetID)
+	categories, err := s.store.GetCategoryTree(accountID)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, categories)
+}
+
+func (s Server) handleGetCategory(w http.ResponseWriter, r *http.Request) {
+	// TODO: validate userID
+	// userID := getAuthUserID(r)
+
+	// accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	// if err != nil {
+	// 	writeJSON(w, http.StatusBadRequest, err.Error())
+	// 	return
+	// }
+
+	categoryID, err := strconv.ParseInt(chi.URLParam(r, "categoryID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	category, err := s.store.GetSingleCategoryTree(categoryID)
+	fmt.Printf("category %v", category)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// TODO: validate account
+
+	writeJSON(w, http.StatusOK, category)
 }
 
 func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
@@ -201,15 +251,15 @@ func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	budgetID, err := strconv.ParseInt(chi.URLParam(r, "budgetID"), 10, 0)
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// TODO: validate that the user owns the budget and category
+	// TODO: validate that the user owns the account and category
 
-	expense := models.NewExpense(userID, budgetID, req.CategoryID, req.Description, req.Amount, req.Date)
+	expense := models.NewExpense(userID, accountID, req.CategoryID, req.Description, req.Amount, req.Date)
 	if err := s.store.CreateExpense(expense); err != nil {
 		fmt.Printf("%v", err)
 		return
@@ -221,13 +271,62 @@ func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
 func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 	userID := getAuthUserID(r)
 
-	budgetID, err := strconv.ParseInt(chi.URLParam(r, "budgetID"), 10, 0)
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// TODO: validate user owns the budget
-	expenses, err := s.store.GetExpenses(userID, budgetID)
+
+	q := r.URL.Query()
+	minAm, err := strconv.ParseInt(q.Get("minAmount"), 10, 0)
+	var minAmount *int64
+	if err == nil && minAm != 0 {
+		minAmount = &minAm
+	}
+	maxAm, err := strconv.ParseInt(q.Get("maxAmount"), 10, 0)
+	var maxAmount *int64
+	if err == nil && maxAm != 0 {
+		maxAmount = &maxAm
+	}
+	minDt, err := time.Parse(time.RFC3339, q.Get("minDate"))
+	var minDate *time.Time
+	if err == nil {
+		minDate = &minDt
+	}
+	maxDt, err := time.Parse(time.RFC3339, q.Get("maxDate"))
+	var maxDate *time.Time
+	if err == nil {
+		maxDate = &maxDt
+	}
+
+	var categories []int64
+	for _, cat := range q["categoryIds[]"] {
+		ct, err := strconv.ParseInt(cat, 10, 0)
+		if err != nil {
+			// todo: handle non integer value error
+		}
+
+		categories = append(categories, ct)
+	}
+	categoryIDs, err := s.store.GetListCategoryIDsAndTheirSubcategories(categories)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// TODO: handle subcategories
+
+	filters := &models.ExpenseFilters{
+		MinAmount:   minAmount,
+		MaxAmount:   maxAmount,
+		MinDate:     minDate,
+		MaxDate:     maxDate,
+		CategoryIDs: categoryIDs,
+	}
+	fmt.Printf("%+v", filters)
+
+	// TODO: validate user owns the account
+	expenses, err := s.store.GetExpenses(userID, accountID, filters)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
@@ -237,3 +336,24 @@ func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 
 // TODO: delete expense
 // TODO: delete
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
+}

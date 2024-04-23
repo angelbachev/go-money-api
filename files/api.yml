@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: GO Money Tracker
+  description: |-
+    This is an API for tracking expenses
+  contact:
+    email: angelbachev@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+servers:
+  - url: http://104.248.29.228:8089
+  - url: http://localhost:8089
+tags:
+  - name: Auth
+    description: Operations about auth
+  - name: Users
+    description: Operations about users
+  - name: Accounts
+    description: Operations about accounts
+  - name: Categories
+    description: Operations about categories
+  - name: Expenses
+    description: Operations about expenses
+paths:
+  /api/accounts:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Accounts
+      summary: Create a new account
+      operationId: createAccount2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description: 
+                  type: string
+                currencyCode:
+                  type: string
+                  format: currency
+                  example: BGN
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Accounts
+      summary: List accounts
+      operationId: listAccounts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'          
+
+  /api/accounts/{accountId}/categories:
+    parameters:
+      - name: accountId
+        in: path
+        description: ID of account for which we want to create category
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Categories
+      summary: Create category
+      operationId: createCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description: 
+                  type: string
+                parentId:
+                  type: integer
+                  format: int64
+                  nullable: true
+                
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Categories
+      summary: Get category tree
+      operationId: getCategoryTree
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryTree'        
+  /api/accounts/{accountId}/categories/{categoryId}:
+    parameters:
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Categories
+      summary: Get category tree for specific category
+      operationId: getCategoryTreeForSpecifiCategory
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryTree'       
+                  
+  /api/accounts/{accountId}/expenses:
+    parameters:
+      - name: accountId
+        in: path
+        description: ID of account for which we want to create expense
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Expenses
+      summary: Create expense
+      operationId: createExpense
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - categoryId
+                - description
+                - amount
+                - date
+              properties:
+                categoryId:
+                  type: integer
+                  format: int64
+                description: 
+                  type: string
+                amount:
+                  type: integer
+                  format: int64
+                  description: Amount in minor units eg. cents
+                  example: 123.12
+                date:
+                  type: string
+                  format: date-time
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Expenses
+      summary: List expenses
+      operationId: getExpenses
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'    
+                  
+  /api/accounts/{accountId}/categories/{categoryId}/image:
+    post:
+      tags:
+        - Categories
+      summary: Upload category image
+      description: 'Replace previous image'
+      operationId: uploadCategoryImage
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: url
+      security:
+        - bearerAuth: []
+
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Create user (Register)
+      operationId: register
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/auth/tokens:
+    post:
+      tags:
+        - Auth
+      summary: Create auth token (Logs user into the system)
+      operationId: login
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '201':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        '400':
+          description: Invalid username/password supplied
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Auth
+      summary: Delete auth token (Logs out user from the system)
+      description: This can only be done by the logged in user.
+      operationId: logout
+      responses:
+        '204':
+          description: Auth token is succcessfully deleted
+        '404':
+          description: User not found/Invalid auth token
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Auth
+      summary: Refresh auth token
+      operationId: createRefreshToken
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authToken:
+                    type: string
+                  refreshToken:
+                    type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        email:
+          type: string
+          example: john@email.com
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+    Account:
+      required:
+        - id
+        - name
+        - description
+        - currencyCode
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        currencyCode:
+          type: string
+          format: currency
+          example: BGN
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+    Category:
+      required:
+        - id
+        - name
+        - userId
+        - parentId
+        - description
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+    CategoryTree:
+      required:
+        - id
+        - userId
+        - name
+        - description
+        - children
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTree'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+    Expense:
+      required:
+        - id
+        - userId
+        - categoryId
+        - description
+        - amount
+        - date
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        categoryId:
+          type: integer
+          format: int64
+        description:
+          type: string
+        amount:
+          type: integer
+          format: int64
+          description: Amount is in minor unit
+          example: 15613
+        date:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+          description: Date at which the expense happened
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'

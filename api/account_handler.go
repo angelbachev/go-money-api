@@ -2,9 +2,10 @@ package api
 
 import "time"
 
-type CreateBudgetRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+type CreateAccountRequest struct {
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	CurrencyCode string `json:"currencyCode"`
 }
 
 type CreateCategoryRequest struct {
@@ -18,4 +19,11 @@ type CreateExpenseRequest struct {
 	Description string    `json:"description"`
 	Amount      int64     `json:"amount"`
 	Date        time.Time `json:"date"`
+}
+
+type ListExpensesRequest struct {
+	MinAmount *int64     `json:"minAmount"`
+	MaxAmount *int64     `json:"maxAmount"`
+	MinDate   *time.Time `json:"minDate"`
+	MaxDate   *time.Time `json:"maxDate"`
 }

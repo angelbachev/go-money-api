@@ -8,7 +8,7 @@ import (
 
 type Store interface {
 	UserStore
-	BudgetStore
+	AccountStore
 	CategoryStore
 	ExpenseStore
 }
