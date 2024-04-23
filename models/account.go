@@ -24,3 +24,10 @@ func NewAccount(userID int64, name, description, currencyCode string) *Account {
 		UpdatedAt:    time.Now().UTC(),
 	}
 }
+
+func (a *Account) Update(name, description, currencyCode string) {
+	a.Name = name
+	a.Description = description
+	a.CurrencyCode = currencyCode
+	a.UpdatedAt = time.Now().UTC()
+}

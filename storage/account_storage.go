@@ -10,6 +10,7 @@ import (
 
 type AccountStore interface {
 	CreateAccount(account *models.Account) error
+	UpdateAccount(account *models.Account) error
 	GetAccountByID(userID, accountID int64) (*models.Account, error)
 	GetAccounts(userID int64) ([]*models.Account, error)
 	DeleteAccount(id int64) error
@@ -41,6 +42,20 @@ func (s MySQLStore) CreateAccount(account *models.Account) error {
 	account.ID = id
 
 	return nil
+}
+
+func (s MySQLStore) UpdateAccount(account *models.Account) error {
+	query := "UPDATE accounts SET name = ?, description = ?, currency_code = ?, updated_at = ? WHERE id = ?"
+	_, err := s.db.Exec(
+		query,
+		account.Name,
+		account.Description,
+		account.CurrencyCode,
+		account.UpdatedAt,
+		account.ID,
+	)
+
+	return err
 }
 
 func (s MySQLStore) GetAccountByID(userID, id int64) (*models.Account, error) {

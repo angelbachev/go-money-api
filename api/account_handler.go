@@ -8,6 +8,12 @@ type CreateAccountRequest struct {
 	CurrencyCode string `json:"currencyCode"`
 }
 
+type UpdateAccountRequest struct {
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	CurrencyCode string `json:"currencyCode"`
+}
+
 type CreateCategoryRequest struct {
 	ParentID    int64  `json:"parentId"`
 	Name        string `json:"name"`

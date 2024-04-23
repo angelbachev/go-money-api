@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -39,7 +40,8 @@ func (s Server) router() http.Handler {
 	r.Use(middleware.Logger)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
+		tmpl := template.Must(template.ParseFiles("./views/index.html"))
+		tmpl.Execute(w, map[string]any{"ReleasedAt": os.Getenv("RELEASED_AT")})
 	})
 
 	// Creating a New Router
@@ -58,6 +60,7 @@ func (s Server) router() http.Handler {
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.Post("/accounts", s.handleCreateAccount)
+		r.Put("/accounts/{accountID}", s.handleUpdateAccount)
 		r.Get("/accounts", s.handleListAccounts)
 		r.Delete("/accounts/{accountID}", s.handleDeleteAccount)
 
@@ -167,6 +170,36 @@ func (s Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 	account := models.NewAccount(userID, req.Name, req.Description, req.CurrencyCode)
 
 	s.store.CreateAccount(account)
+	writeJSON(w, http.StatusCreated, account)
+}
+
+func (s Server) handleUpdateAccount(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var req UpdateAccountRequest
+	if err := getBody(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	account, err := s.store.GetAccountByID(userID, accountID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	account.Update(req.Name, req.Description, req.CurrencyCode)
+	err = s.store.UpdateAccount(account)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	writeJSON(w, http.StatusCreated, account)
 }
 

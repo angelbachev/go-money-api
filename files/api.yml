@@ -83,6 +83,40 @@ paths:
         schema:
           type: integer
           format: int64
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Accounts
+      summary: Update account
+      operationId: updateAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description: 
+                  type: string
+                currencyCode:
+                  type: string
+                  format: currency
+                  example: BGN
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+        '404':
+          description: Not found     
     delete:
       security:
         - bearerAuth: []
