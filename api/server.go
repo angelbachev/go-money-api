@@ -78,7 +78,7 @@ func (s Server) router() http.Handler {
 	r.Mount("/api", apiRouter)
 
 	workDir, _ := os.Getwd()
-	filesDir := http.Dir(filepath.Join(workDir, "docs"))
+	filesDir := http.Dir(filepath.Join(workDir, "files"))
 	fmt.Println(filesDir)
 	FileServer(r, "/files", filesDir)
 
