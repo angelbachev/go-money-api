@@ -20,7 +20,20 @@ type CreateCategoryRequest struct {
 	Description string `json:"description"`
 }
 
+type UpdateCategoryRequest struct {
+	ParentID    int64  `json:"parentId"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type CreateExpenseRequest struct {
+	CategoryID  int64     `json:"categoryId"`
+	Description string    `json:"description"`
+	Amount      int64     `json:"amount"`
+	Date        time.Time `json:"date"`
+}
+
+type UpdateExpenseRequest struct {
 	CategoryID  int64     `json:"categoryId"`
 	Description string    `json:"description"`
 	Amount      int64     `json:"amount"`

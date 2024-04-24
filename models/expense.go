@@ -34,3 +34,11 @@ func NewExpense(userID, accountID, categoryID int64, description string, amount 
 		UpdatedAt:   time.Now().UTC(),
 	}
 }
+
+func (e *Expense) Update(categoryID int64, description string, amount int64, date time.Time) {
+	e.CategoryID = categoryID
+	e.Description = description
+	e.Amount = amount
+	e.Date = date
+	e.UpdatedAt = time.Now().UTC()
+}

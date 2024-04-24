@@ -68,10 +68,13 @@ func (s Server) router() http.Handler {
 		r.Get("/accounts/{accountID}/categories", s.handleListCategories)
 		r.Get("/accounts/{accountID}/categories/{categoryID}", s.handleGetCategory)
 		r.Delete("/accounts/{accountID}/categories/{categoryID}", s.handleDeleteCategory)
+		r.Put("/accounts/{accountID}/categories/{categoryID}", s.handleUpdateCategory)
 
 		r.Post("/accounts/{accountID}/expenses", s.handleCreateExpense)
 		r.Get("/accounts/{accountID}/expenses", s.handleListExpenses)
 		r.Delete("/accounts/{accountID}/expenses/{expenseID}", s.handleDeleteExpense)
+		r.Put("/accounts/{accountID}/expenses/{expenseID}", s.handleUpdateExpense)
+
 	})
 
 	// Public routes
@@ -285,6 +288,14 @@ func (s Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.ParentID == 0 {
+		req.ParentID, err = s.store.GetRootCategoryID(accountID)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	category := models.NewCategory(userID, accountID, req.ParentID, req.Name, req.Description)
 
 	s.store.CreateCategory(category)
@@ -390,6 +401,55 @@ func (s Server) handleDeleteCategory(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (s Server) handleUpdateCategory(w http.ResponseWriter, r *http.Request) {
+	// userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	categoryID, err := strconv.ParseInt(chi.URLParam(r, "categoryID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var req UpdateCategoryRequest
+	if err := getBody(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	category, err := s.store.GetCategoryByID(categoryID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if category == nil || category.AccountID != accountID {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	if req.ParentID == 0 {
+		req.ParentID, err = s.store.GetRootCategoryID(accountID)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+	category.Update(req.ParentID, req.Name, req.Description)
+	err = s.store.UpdateCategory(category)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, category)
+}
+
 func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
 	userID := getAuthUserID(r)
 
@@ -410,6 +470,47 @@ func (s Server) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
 	expense := models.NewExpense(userID, accountID, req.CategoryID, req.Description, req.Amount, req.Date)
 	if err := s.store.CreateExpense(expense); err != nil {
 		fmt.Printf("%v", err)
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, expense)
+}
+
+func (s Server) handleUpdateExpense(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+	// TODO: validate new category belongs to the same account
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	expenseID, err := strconv.ParseInt(chi.URLParam(r, "expenseID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var req UpdateExpenseRequest
+	if err := getBody(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	expense, err := s.store.GetExpenseByID(userID, accountID, expenseID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if expense == nil || expense.AccountID != accountID {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+	expense.Update(req.CategoryID, req.Description, req.Amount, req.Date)
+	err = s.store.UpdateExpense(expense)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

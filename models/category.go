@@ -35,3 +35,10 @@ func NewCategory(userID, accountID, parentID int64, name, description string) *C
 		UpdatedAt:   time.Now().UTC(),
 	}
 }
+
+func (c *Category) Update(parentID int64, name, description string) {
+	c.ParentID = parentID
+	c.Name = name
+	c.Description = description
+	c.UpdatedAt = time.Now().UTC()
+}

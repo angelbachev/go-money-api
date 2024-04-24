@@ -336,6 +336,58 @@
 					"response": []
 				},
 				{
+					"name": "Update category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"pm.collectionVariables.set(\"categoryId\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"parentId\": null,\r\n    \"name\": \"Car\",\r\n    \"description\": \"description\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get category tree",
 					"request": {
 						"auth": {
@@ -465,7 +517,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"categoryId\": 2,\r\n    \"description\": \"Test21\",\r\n    \"amount\": 121212,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
+							"raw": "{\r\n    \"categoryId\": 9,\r\n    \"description\": \"Test2132\",\r\n    \"amount\": 121212,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -481,6 +533,58 @@
 								"accounts",
 								"{{accountId}}",
 								"expenses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update expense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"pm.collectionVariables.set(\"expenseId\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"categoryId\": 2,\r\n    \"description\": \"Test21\",\r\n    \"amount\": 121212,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses/{{expenseId}}",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"expenses",
+								"{{expenseId}}"
 							]
 						}
 					},

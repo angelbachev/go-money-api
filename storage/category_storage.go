@@ -17,6 +17,8 @@ type CategoryStore interface {
 	GetSingleCategoryTree(id int64) (*models.CategoryTree, error)
 	GetListCategoryIDsAndTheirSubcategories(ids []int64) ([]int64, error)
 	DeleteCategory(id int64) error
+	UpdateCategory(category *models.Category) error
+	GetRootCategoryID(accountID int64) (int64, error)
 }
 
 func (s MySQLStore) CreateCategory(category *models.Category) error {
@@ -269,6 +271,7 @@ func scanIntoCategory(row *sql.Row) (*models.Category, error) {
 	var category models.Category
 	switch err := row.Scan(
 		&category.ID,
+		&category.UserID,
 		&category.AccountID,
 		&category.ParentID,
 		&category.Name,
@@ -293,4 +296,28 @@ func (s MySQLStore) DeleteCategory(id int64) error {
 	}
 
 	return nil
+}
+
+func (s MySQLStore) GetRootCategoryID(accountID int64) (int64, error) {
+	query := `SELECT id FROM categories WHERE account_id = ? AND parent_id = 0 LIMIT 1`
+	row := s.db.QueryRow(query, accountID)
+
+	var id int64
+	err := row.Scan(&id)
+
+	return id, err
+}
+
+func (s MySQLStore) UpdateCategory(category *models.Category) error {
+	query := "UPDATE categories SET parent_id = ?, name = ?, description = ?, updated_at = ? WHERE id = ?"
+	_, err := s.db.Exec(
+		query,
+		category.ParentID,
+		category.Name,
+		category.Description,
+		category.UpdatedAt,
+		category.ID,
+	)
+
+	return err
 }

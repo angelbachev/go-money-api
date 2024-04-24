@@ -13,6 +13,7 @@ type ExpenseStore interface {
 	GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error)
 	GetExpenseByID(userID, accountID, expenseID int64) (*models.Expense, error)
 	DeleteExpense(id int64) error
+	UpdateExpense(expense *models.Expense) error
 }
 
 func (s MySQLStore) CreateExpense(expense *models.Expense) error {
@@ -173,4 +174,19 @@ func (s MySQLStore) DeleteExpense(id int64) error {
 	}
 
 	return nil
+}
+
+func (s MySQLStore) UpdateExpense(expense *models.Expense) error {
+	query := "UPDATE expenses SET category_id = ?, description = ?, amount = ?, date = ?, updated_at = ? WHERE id = ?"
+	_, err := s.db.Exec(
+		query,
+		expense.CategoryID,
+		expense.Description,
+		expense.Amount,
+		expense.Date,
+		expense.UpdatedAt,
+		expense.ID,
+	)
+
+	return err
 }

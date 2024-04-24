@@ -78,7 +78,6 @@ paths:
     parameters:
       - name: accountId
         in: path
-        description: ID of account for which we want to create category
         required: true
         schema:
           type: integer
@@ -247,7 +246,45 @@ paths:
           description: Successful operation
         '404':
           description: Not found      
-                  
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Categories
+      summary: Update category
+      operationId: updateCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+                - parentId
+              properties:
+                name:
+                  type: string
+                description: 
+                  type: string
+                parentId:
+                  type: integer
+                  format: int64
+                  nullable: true
+                
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+          
   /api/accounts/{accountId}/expenses:
     parameters:
       - name: accountId
@@ -344,6 +381,50 @@ paths:
           description: Successful operation
         '404':
           description: Not found
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Expenses
+      summary: Update expense
+      operationId: updateExpense
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - categoryId
+                - description
+                - amount
+                - date
+              properties:
+                categoryId:
+                  type: integer
+                  format: int64
+                description: 
+                  type: string
+                amount:
+                  type: integer
+                  format: int64
+                  description: Amount in minor units eg. cents
+                  example: 123.12
+                date:
+                  type: string
+                  format: date-time
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+          
   /api/accounts/{accountId}/categories/{categoryId}/image:
     post:
       tags:
