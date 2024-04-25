@@ -344,15 +344,64 @@ paths:
         - Expenses
       summary: List expenses
       operationId: getExpenses
+      parameters:
+        - name: minAmount
+          in: query
+          description: Min amount in minor units
+          schema:
+            type: integer
+            format: int64  
+        - name: maxAmount
+          in: query
+          description: Max amount in minor units
+          schema:
+            type: integer
+            format: int64
+        - name: minDate
+          in: query
+          schema:
+            type: string
+            format: date-time  
+        - name: maxDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: categoryIds[]
+          in: query
+          schema:
+            type: array
+            items:
+              type: number
+              format: int64  
+        - name: page
+          in: query
+          description: Starts from 1
+          schema:
+            type: integer
+            format: int64
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int64  
+            default: 10
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Expense'    
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Expense'
+                  totalCount:
+                    type: number
+                    format: int64
   /api/accounts/{accountId}/expenses/{expenseId}:
     parameters:
       - name: accountId

@@ -247,7 +247,7 @@ func (s Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate that the user owns the account and category
 
-	expenses, err := s.store.GetExpenses(userID, accountID, filters)
+	expenses, err := s.store.GetExpenses(userID, accountID, filters, 0, 0)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, err.Error())
 		return
@@ -377,7 +377,7 @@ func (s Server) handleDeleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate that the user owns the account and category
 
-	expenses, err := s.store.GetExpenses(userID, accountID, filters)
+	expenses, err := s.store.GetExpenses(userID, accountID, filters, 0, 0)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, err.Error())
 		return
@@ -575,15 +575,41 @@ func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 		MaxDate:     maxDate,
 		CategoryIDs: categoryIDs,
 	}
-	fmt.Printf("%+v", filters)
 
-	// TODO: validate user owns the account
-	expenses, err := s.store.GetExpenses(userID, accountID, filters)
+	p := q.Get("page")
+	if p == "" || p == "0" {
+		p = "1"
+	}
+	page, err := strconv.ParseInt(p, 10, 0)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusCreated, expenses)
+
+	l := q.Get("limit")
+	if l == "" || l == "0" {
+		l = "10"
+	}
+	limit, err := strconv.ParseInt(l, 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// TODO: validate user owns the account
+	expenses, err := s.store.GetExpenses(userID, accountID, filters, page, limit)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	totalCount, err := s.store.GetExpensesCount(userID, accountID, filters)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{"items": expenses, "totalCount": totalCount})
 }
 
 func (s Server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {

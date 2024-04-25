@@ -2,9 +2,9 @@
 Money tracking API written in Golang
 
 # TODOs
-1. [] Add Update category API.
-1. [] Add Update expense API.
-1. [] Add pagination to expenses API.
+1. [x] Add Update category API.
+1. [x] Add Update expense API.
+1. [x] Add pagination to expenses API.
 1. [] Add Upload category image API.
 1. [] Add import expenses API.
 1. [] Add Validation.

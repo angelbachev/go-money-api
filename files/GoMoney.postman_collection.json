@@ -618,7 +618,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses?maxDate=2025-04-20T16:42:01Z&minAmount=200&maxAmount=100000&minDate=2023-04-20T16:42:01Z&categoryIds[]=2&categoryIds[]=4",
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses",
 							"host": [
 								"{{baseApiUrl}}"
 							],
@@ -630,27 +630,43 @@
 							"query": [
 								{
 									"key": "maxDate",
-									"value": "2025-04-20T16:42:01Z"
+									"value": "2025-04-20T16:42:01Z",
+									"disabled": true
 								},
 								{
 									"key": "minAmount",
-									"value": "200"
+									"value": "200",
+									"disabled": true
 								},
 								{
 									"key": "maxAmount",
-									"value": "100000"
+									"value": "100000",
+									"disabled": true
 								},
 								{
 									"key": "minDate",
-									"value": "2023-04-20T16:42:01Z"
+									"value": "2023-04-20T16:42:01Z",
+									"disabled": true
 								},
 								{
 									"key": "categoryIds[]",
-									"value": "2"
+									"value": "2",
+									"disabled": true
 								},
 								{
 									"key": "categoryIds[]",
-									"value": "4"
+									"value": "4",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "2",
+									"disabled": true
 								}
 							]
 						}

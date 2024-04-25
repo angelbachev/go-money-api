@@ -10,7 +10,8 @@ import (
 
 type ExpenseStore interface {
 	CreateExpense(cateory *models.Expense) error
-	GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error)
+	GetExpenses(userID, accountID int64, filters *models.ExpenseFilters, page, limit int64) ([]*models.Expense, error)
+	GetExpensesCount(userID, accountID int64, filters *models.ExpenseFilters) (int64, error)
 	GetExpenseByID(userID, accountID, expenseID int64) (*models.Expense, error)
 	DeleteExpense(id int64) error
 	UpdateExpense(expense *models.Expense) error
@@ -46,7 +47,7 @@ func (s MySQLStore) CreateExpense(expense *models.Expense) error {
 	return nil
 }
 
-func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.ExpenseFilters) ([]*models.Expense, error) {
+func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.ExpenseFilters, page, limit int64) ([]*models.Expense, error) {
 	query := `
 		SELECT * 
 		FROM expenses 
@@ -57,6 +58,7 @@ func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.Expense
 		ORDER BY 
 			date DESC, 
 			amount DESC
+		%s
 	`
 	var filtersParts []string
 	var params = []any{userID, accountID}
@@ -102,7 +104,16 @@ func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.Expense
 	if len(filtersParts) > 0 {
 		filterClause = " AND " + strings.Join(filtersParts, " AND ")
 	}
-	query = fmt.Sprintf(query, filterClause)
+
+	var limitClause string
+	if page > 0 && limit > 0 {
+		limitClause = "LIMIT ?, ?"
+		offset := (page - 1) * limit
+		params = append(params, offset)
+		params = append(params, limit)
+	}
+
+	query = fmt.Sprintf(query, filterClause, limitClause)
 	rows, err := s.db.Query(query, params...)
 
 	if err != nil {
@@ -133,6 +144,72 @@ func (s MySQLStore) GetExpenses(userID, accountID int64, filters *models.Expense
 		expenses = append(expenses, &expense)
 	}
 	return expenses, nil
+}
+
+func (s MySQLStore) GetExpensesCount(userID, accountID int64, filters *models.ExpenseFilters) (int64, error) {
+	query := `
+		SELECT COUNT(id) 
+		FROM expenses 
+		WHERE 
+			user_id = ? 
+			AND account_id = ?
+			%s
+	`
+	var filtersParts []string
+	var params = []any{userID, accountID}
+
+	if filters != nil {
+		if filters.MinAmount != nil {
+			filtersParts = append(filtersParts, "amount >= ?")
+			params = append(params, *filters.MinAmount)
+		}
+
+		if filters.MaxAmount != nil {
+			filtersParts = append(filtersParts, "amount <= ?")
+			params = append(params, *filters.MaxAmount)
+		}
+
+		if filters.MinDate != nil {
+			filtersParts = append(filtersParts, "date >= ?")
+			params = append(params, *filters.MinDate)
+		}
+
+		if filters.MaxDate != nil {
+			filtersParts = append(filtersParts, "date <= ?")
+			params = append(params, *filters.MaxDate)
+		}
+
+		if len(filters.CategoryIDs) > 0 {
+			categoriesClause := "category_id IN ("
+
+			for idx, ct := range filters.CategoryIDs {
+				params = append(params, ct)
+				if idx == 0 {
+					categoriesClause += "?"
+				} else {
+					categoriesClause += ", ?"
+				}
+			}
+			categoriesClause += ")"
+			filtersParts = append(filtersParts, categoriesClause)
+		}
+	}
+
+	var filterClause string
+	if len(filtersParts) > 0 {
+		filterClause = " AND " + strings.Join(filtersParts, " AND ")
+	}
+
+	query = fmt.Sprintf(query, filterClause)
+	row := s.db.QueryRow(query, params...)
+	var count int64
+	err := row.Scan(&count)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (s MySQLStore) GetExpenseByID(userID, accountID, expenseID int64) (*models.Expense, error) {
