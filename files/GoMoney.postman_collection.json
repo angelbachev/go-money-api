@@ -19,7 +19,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"angelbachev6@gmail.com\",\r\n    \"password\": \"Test123\"\r\n}",
+							"raw": "{\r\n    \"email\": \"angelbachev@gmail.com\",\r\n    \"password\": \"Test123\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -33,6 +33,83 @@
 							],
 							"path": [
 								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"defaultAccountId\": 1,\r\n    \"theme\": \"dark\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/user/settings",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"user",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user settings",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"angelbachev6@gmail.com\",\r\n    \"password\": \"Test123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/user/settings",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"user",
+								"settings"
 							]
 						}
 					},
@@ -51,7 +128,7 @@
 							"script": {
 								"exec": [
 									"var jsonData = JSON.parse(responseBody);\r",
-									"pm.collectionVariables.set(\"auth_token\", jsonData.token);"
+									"pm.collectionVariables.set(\"authToken\", jsonData.accessToken);"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -63,7 +140,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\": \"acho_the_best@abv.bg\",\r\n    \"password\": \"Pass_123\"\r\n}",
+							"raw": "{\r\n    \"email\": \"angelbachev@gmail.com\",\r\n    \"password\": \"Test123\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -91,7 +168,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -137,7 +214,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -186,7 +263,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -223,7 +300,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -250,7 +327,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -305,7 +382,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -356,7 +433,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -395,7 +472,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -424,7 +501,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -447,6 +524,49 @@
 					"response": []
 				},
 				{
+					"name": "View category icon",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/files/images/categories/food.svg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"files",
+								"images",
+								"categories",
+								"food.svg"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get available icons",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseApiUrl}}/category-icons",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"category-icons"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Delete category",
 					"request": {
 						"auth": {
@@ -454,7 +574,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -508,7 +628,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -517,7 +637,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"categoryId\": 9,\r\n    \"description\": \"Test2132\",\r\n    \"amount\": 121212,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
+							"raw": "{\r\n    \"categoryId\": 9,\r\n    \"description\": \"Test2132\",\r\n    \"amount\": 5555,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -559,7 +679,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -568,7 +688,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"categoryId\": 2,\r\n    \"description\": \"Test21\",\r\n    \"amount\": 121212,\r\n    \"date\": \"2024-04-18T14:11:12.523842483Z\"\r\n}",
+							"raw": "{\r\n    \"categoryId\": 9,\r\n    \"description\": \"аааа\",\r\n    \"amount\": 2222,\r\n    \"date\": \"2023-04-18T14:11:12.523842483Z\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -601,7 +721,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]
@@ -681,7 +801,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{auth_token}}",
+									"value": "{{authToken}}",
 									"type": "string"
 								}
 							]

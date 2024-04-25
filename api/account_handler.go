@@ -14,16 +14,23 @@ type UpdateAccountRequest struct {
 	CurrencyCode string `json:"currencyCode"`
 }
 
+type UpdateUserSettingsRequest struct {
+	DefaultAccountID int64  `json:"defaultAccountId"`
+	Theme            string `json:"theme"`
+}
+
 type CreateCategoryRequest struct {
 	ParentID    int64  `json:"parentId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Icon        string `json:"icon"`
 }
 
 type UpdateCategoryRequest struct {
 	ParentID    int64  `json:"parentId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Icon        string `json:"icon"`
 }
 
 type CreateExpenseRequest struct {

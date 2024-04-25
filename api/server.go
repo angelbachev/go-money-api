@@ -59,6 +59,9 @@ func (s Server) router() http.Handler {
 		// and tweak it, its not scary.
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
+		r.Put("/user/settings", s.handleUpdateUserSettings)
+		r.Get("/user/settings", s.handleGetUserSettings)
+
 		r.Post("/accounts", s.handleCreateAccount)
 		r.Put("/accounts/{accountID}", s.handleUpdateAccount)
 		r.Get("/accounts", s.handleListAccounts)
@@ -81,6 +84,7 @@ func (s Server) router() http.Handler {
 	apiRouter.Group(func(r chi.Router) {
 		r.Post("/users", s.handleRegisterUser)
 		r.Post("/auth/tokens", s.handleLoginUser)
+		r.Get("/category-icons", s.handleListCategoryIcons)
 	})
 
 	// Mounting the new Sub Router on the main router
@@ -135,6 +139,34 @@ func (s Server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.store.CreateUser(user)
+
+	// Create default account and categories
+	account := models.NewAccount(user.ID, "Акаунт", "Описание на акаунт", "BGN")
+	s.store.CreateAccount(account)
+	settings := models.NewUserSettings(user.ID, account.ID, "default")
+	s.store.CreateUserSettings(settings)
+
+	rootCategory := models.NewCategory(user.ID, account.ID, 0, "", "", "")
+	s.store.CreateCategory(rootCategory)
+	categories := []map[string]any{
+		{"name": "Храна", "description": "Храна, ресторанти и др.", "icon": "food.svg"},
+		{"name": "Сметки", "description": "Наем, данъци, комунални услуги", "icon": "taxes.svg"},
+		{"name": "Транспорт", "description": "Градски транспорт, кола, такси, др.", "icon": "transport.svg"},
+		{"name": "Забавления", "description": "", "icon": "entertainment.svg"},
+		{"name": "Хоби", "description": "", "icon": "hobbies.svg"},
+		{"name": "Спорт", "description": "Спортно оборудване, карти за спорт и др.", "icon": "sport.svg"},
+		{"name": "Облекло", "description": "", "icon": "clothes.svg"},
+		{"name": "Образование", "description": "Книги, уроци, курсове, семинари и др.", "icon": "education.svg"},
+		{"name": "Здраве", "description": "Медицински прегледи, лекарства и др.", "icon": "health.svg"},
+		{"name": "Почивка", "description": "Хотели, самолетни билети, екскурзоводи, музеи и др.", "icon": "travelling.svg"},
+		{"name": "Дом", "description": "Home", "icon": "home.svg"},
+		{"name": "Други", "description": "Всичко останало", "icon": "others.svg"},
+	}
+	for _, cat := range categories {
+		category := models.NewCategory(user.ID, account.ID, rootCategory.ID, cat["name"].(string), cat["description"].(string), cat["icon"].(string))
+		s.store.CreateCategory(category)
+	}
+
 	writeJSON(w, http.StatusCreated, *user)
 }
 
@@ -157,8 +189,48 @@ func (s Server) handleLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(createJWT(user.ID))
-	writeJSON(w, http.StatusCreated, map[string]string{"token": createJWT(user.ID)})
+	settings, err := s.store.GetUserSettings(user.ID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Unable to login user"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"accessToken": createJWT(user.ID),
+		"settings":    settings,
+	})
+}
+
+func (s Server) handleUpdateUserSettings(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	var req UpdateUserSettingsRequest
+	if err := getBody(r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	settings, err := s.store.GetUserSettings(userID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	settings.Update(req.DefaultAccountID, req.Theme)
+	s.store.UpdateUserSettings(settings)
+	writeJSON(w, http.StatusOK, settings)
+}
+
+func (s Server) handleGetUserSettings(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	settings, err := s.store.GetUserSettings(userID)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, settings)
 }
 
 func (s Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -296,7 +368,7 @@ func (s Server) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	category := models.NewCategory(userID, accountID, req.ParentID, req.Name, req.Description)
+	category := models.NewCategory(userID, accountID, req.ParentID, req.Name, req.Description, req.Icon)
 
 	s.store.CreateCategory(category)
 	writeJSON(w, http.StatusCreated, category)
@@ -440,7 +512,7 @@ func (s Server) handleUpdateCategory(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	category.Update(req.ParentID, req.Name, req.Description)
+	category.Update(req.ParentID, req.Name, req.Description, req.Icon)
 	err = s.store.UpdateCategory(category)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, err.Error())
@@ -662,4 +734,19 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
 		fs.ServeHTTP(w, r)
 	})
+}
+
+func (s Server) handleListCategoryIcons(w http.ResponseWriter, r *http.Request) {
+	icons, err := os.ReadDir("./files/images/categories")
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	var iconNames []string
+	for _, icon := range icons {
+		iconNames = append(iconNames, icon.Name())
+	}
+
+	writeJSON(w, http.StatusOK, iconNames)
 }

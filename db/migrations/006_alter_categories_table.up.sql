@@ -1,1 +1,0 @@
-ALTER TABLE `categories` CHANGE COLUMN `budget_id` `account_id` INT NOT NULL;

@@ -24,6 +24,57 @@ tags:
   - name: Expenses
     description: Operations about expenses
 paths:
+  /api/user/settings:
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Update user settings
+      operationId: updateUserSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                defaultAccountId:
+                  type: number
+                  format: int64
+                theme: 
+                  type: string
+                  enum:
+                    - default
+                    - light
+                    - dark
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'          
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Get user settings
+      operationId: getUserSettings
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSettings'
+                  
   /api/accounts:
     post:
       security:
@@ -31,7 +82,7 @@ paths:
       tags:
         - Accounts
       summary: Create a new account
-      operationId: createAccount2
+      operationId: createAccount
       requestBody:
         content:
           application/json:
@@ -167,6 +218,8 @@ paths:
                   type: integer
                   format: int64
                   nullable: true
+                icon:
+                  type: string
                 
         required: true
       responses:
@@ -262,6 +315,7 @@ paths:
                 - name
                 - description
                 - parentId
+                - icon
               properties:
                 name:
                   type: string
@@ -271,7 +325,8 @@ paths:
                   type: integer
                   format: int64
                   nullable: true
-                
+                icon:
+                  type: string
         required: true
       responses:
         '200':
@@ -284,7 +339,39 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
-          
+
+  /api/category-icons:
+    get:
+      tags:
+        - Categories
+      summary: Get available category icons
+      operationId: getAvailableCategoryIcons
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /files/images/categories/{icon}:
+    get:
+      parameters:
+        - name: icon
+          in: path
+          description: ID of account for which we want to create expense
+          required: true
+          schema:
+            type: string
+      tags:
+        - Categories
+      summary: View category icon
+      operationId: viewCategoryIcon
+      responses:
+        '200':
+          description: Successful operation
+                  
   /api/accounts/{accountId}/expenses:
     parameters:
       - name: accountId
@@ -473,46 +560,6 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
-          
-  /api/accounts/{accountId}/categories/{categoryId}/image:
-    post:
-      tags:
-        - Categories
-      summary: Upload category image
-      description: 'Replace previous image'
-      operationId: uploadCategoryImage
-      parameters:
-        - name: accountId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: categoryId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '201':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  url:
-                    type: string
-                    format: url
-      security:
-        - bearerAuth: []
 
   /api/users:
     post:
@@ -584,8 +631,10 @@ paths:
                     type: string
                   refreshToken:
                     type: string
+                  settings:
+                    $ref: '#/components/schemas/UserSettings'
         '400':
-          description: Invalid username/password supplied
+          description: Invalid email/password supplied
     delete:
       security:
         - bearerAuth: []
@@ -679,6 +728,7 @@ components:
         - userId
         - parentId
         - description
+        - icon
         - createdAt
         - updatedAt
       type: object
@@ -697,6 +747,8 @@ components:
           type: string
         description:
           type: string
+        icon:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -711,6 +763,7 @@ components:
         - userId
         - name
         - description
+        - icon
         - children
         - createdAt
         - updatedAt
@@ -725,6 +778,8 @@ components:
         name:
           type: string
         description:
+          type: string
+        icon:
           type: string
         children:
           type: array
@@ -771,6 +826,27 @@ components:
           format: date-time
           example: '2024-04-20T16:42:01Z'
           description: Date at which the expense happened
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-04-20T16:42:01Z'
+    UserSettings:
+      required:
+        - defaultAccountId
+        - theme
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        defaultAccountId:
+          type: integer
+          format: int64
+        theme:
+          type: string
         createdAt:
           type: string
           format: date-time

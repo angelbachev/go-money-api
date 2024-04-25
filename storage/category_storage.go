@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/angelbachev/go-money-api/models"
@@ -23,8 +24,8 @@ type CategoryStore interface {
 
 func (s MySQLStore) CreateCategory(category *models.Category) error {
 	query := `
-	INSERT INTO categories (user_id, account_id, parent_id, name, description, created_at, updated_at)
-	VALUES (?, ?, ?, ?, ?, ?, ?)
+	INSERT INTO categories (user_id, account_id, parent_id, name, description, icon, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := s.db.Exec(
 		query,
@@ -33,6 +34,7 @@ func (s MySQLStore) CreateCategory(category *models.Category) error {
 		category.ParentID,
 		category.Name,
 		category.Description,
+		category.Icon,
 		category.CreatedAt,
 		category.UpdatedAt,
 	)
@@ -83,13 +85,13 @@ func (s MySQLStore) GetCategoryByID(id int64) (*models.Category, error) {
 
 func (s MySQLStore) GetCategoryTree(accountID int64) (*models.CategoryTree, error) {
 	query := `
-		WITH RECURSIVE tree_path (id, user_id, parent_id, name, description, path, created_at, updated_at) AS
+		WITH RECURSIVE tree_path (id, user_id, parent_id, name, description, icon, path, created_at, updated_at) AS
 		(
-			SELECT id, user_id, parent_id, name, description, CONCAT(name, '/') as path, created_at, updated_at
+			SELECT id, user_id, parent_id, name, description, icon, CONCAT(name, '/') as path, created_at, updated_at
     		FROM categories
     		WHERE account_id = ? AND parent_id = 0 -- the tree node for given account
 			UNION ALL
-			SELECT t.id, t.user_id, t.parent_id, t.name, t.description, CONCAT(tp.path, t.name, '/'), t.created_at, t.updated_at
+			SELECT t.id, t.user_id, t.parent_id, t.name, t.description, t.icon, CONCAT(tp.path, t.name, '/'), t.created_at, t.updated_at
 			FROM tree_path AS tp 
     		JOIN categories AS t ON tp.id = t.parent_id AND t.account_id = ?
 		)
@@ -117,6 +119,7 @@ func (s MySQLStore) GetCategoryTree(accountID int64) (*models.CategoryTree, erro
 			&categoryNode.ParentID,
 			&categoryNode.Name,
 			&categoryNode.Description,
+			&categoryNode.Icon,
 			&path,
 			&categoryNode.CreatedAt,
 			&categoryNode.UpdatedAt,
@@ -133,13 +136,13 @@ func (s MySQLStore) GetCategoryTree(accountID int64) (*models.CategoryTree, erro
 
 func (s MySQLStore) GetSingleCategoryTree(id int64) (*models.CategoryTree, error) {
 	query := `
-		WITH RECURSIVE tree_path (id, user_id, parent_id, name, description, path, created_at, updated_at) AS
+		WITH RECURSIVE tree_path (id, user_id, parent_id, name, description, icon, path, created_at, updated_at) AS
 		(
-			SELECT id, user_id, parent_id, name, description, CONCAT(name, '/') as path, created_at, updated_at
+			SELECT id, user_id, parent_id, name, description, icon, CONCAT(name, '/') as path, created_at, updated_at
     		FROM categories
     		WHERE id = ? -- the given category
 			UNION ALL
-			SELECT t.id, t.user_id, t.parent_id, t.name, t.description, CONCAT(tp.path, t.name, '/'), t.created_at, t.updated_at
+			SELECT t.id, t.user_id, t.parent_id, t.name, t.description, icon, CONCAT(tp.path, t.name, '/'), t.created_at, t.updated_at
 			FROM tree_path AS tp 
     		JOIN categories AS t ON tp.id = t.parent_id
 		)
@@ -167,6 +170,7 @@ func (s MySQLStore) GetSingleCategoryTree(id int64) (*models.CategoryTree, error
 			&categoryNode.ParentID,
 			&categoryNode.Name,
 			&categoryNode.Description,
+			&categoryNode.Icon,
 			&path,
 			&categoryNode.CreatedAt,
 			&categoryNode.UpdatedAt,
@@ -276,6 +280,7 @@ func scanIntoCategory(row *sql.Row) (*models.Category, error) {
 		&category.ParentID,
 		&category.Name,
 		&category.Description,
+		&category.Icon,
 		&category.CreatedAt,
 		&category.UpdatedAt,
 	); err {
@@ -309,15 +314,24 @@ func (s MySQLStore) GetRootCategoryID(accountID int64) (int64, error) {
 }
 
 func (s MySQLStore) UpdateCategory(category *models.Category) error {
-	query := "UPDATE categories SET parent_id = ?, name = ?, description = ?, updated_at = ? WHERE id = ?"
+	query := "UPDATE categories SET parent_id = ?, name = ?, description = ?, icon = ?, updated_at = ? WHERE id = ?"
 	_, err := s.db.Exec(
 		query,
 		category.ParentID,
 		category.Name,
 		category.Description,
+		category.Icon,
 		category.UpdatedAt,
 		category.ID,
 	)
 
 	return err
+}
+
+func buildIconUrl(icon string) string {
+	if icon == "" {
+		return ""
+	}
+	path := os.Getenv("CATEGORY_ICON_PATH")
+	return path + icon
 }

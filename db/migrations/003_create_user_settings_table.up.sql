@@ -1,8 +1,8 @@
-CREATE TABLE `go_money`.`budgets` (
+CREATE TABLE user_settings (
   `id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `description` VARCHAR(255) NOT NULL,
+  `default_account_id` INT NOT NULL,
+  `theme` VARCHAR(255) NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`)

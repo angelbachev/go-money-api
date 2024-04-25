@@ -1,10 +1,9 @@
-CREATE TABLE `go_money`.`categories` (
+CREATE TABLE accounts (
   `id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
-  `budget_id` INT NOT NULL,
-  `parent_id` INT NULL,
   `name` VARCHAR(255) NOT NULL,
-  `description` VARCHAR(255) NULL,
+  `description` VARCHAR(255) NOT NULL,
+  `currency_code` CHAR(3) NOT NULL, 
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`)

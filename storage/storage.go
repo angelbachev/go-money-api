@@ -8,6 +8,7 @@ import (
 
 type Store interface {
 	UserStore
+	UserSettingsStore
 	AccountStore
 	CategoryStore
 	ExpenseStore

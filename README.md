@@ -5,7 +5,10 @@ Money tracking API written in Golang
 1. [x] Add Update category API.
 1. [x] Add Update expense API.
 1. [x] Add pagination to expenses API.
-1. [] Add Upload category image API.
+1. <del>[] Add Upload category image API.<del> - For now we will used predefined set of category icons
+1. [x] Create Create/Update settings API
+1. [x] Create default account on user registration
+1. [x] Create default categories on user registration
 1. [] Add import expenses API.
 1. [] Add Validation.
 1. [] Send Registration/confirmation email.
