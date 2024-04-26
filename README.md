@@ -9,14 +9,13 @@ Money tracking API written in Golang
 1. [x] Create Create/Update settings API
 1. [x] Create default account on user registration
 1. [x] Create default categories on user registration
-1. [] Add import expenses API.
+1. [x] Add import expenses API.
 1. [] Add Validation.
 1. [] Send Registration/confirmation email.
 1. [] Add Forgotten password functionality (email + reset APIs).
 1. [] Add Expiry date to auth token.
 1. [] Add Refresh token API
 1. [] Add Logout API
-1. [] Add default categories on account creation
 1. [] Add settings API (choose theme, default account, pagination)
 1. [] Add support for shared/multi user account (invitation)
 1. [] Add tests

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -77,6 +79,7 @@ func (s Server) router() http.Handler {
 		r.Get("/accounts/{accountID}/expenses", s.handleListExpenses)
 		r.Delete("/accounts/{accountID}/expenses/{expenseID}", s.handleDeleteExpense)
 		r.Put("/accounts/{accountID}/expenses/{expenseID}", s.handleUpdateExpense)
+		r.Post("/accounts/{accountID}/expenses/import", s.handleImportExpenses)
 
 	})
 
@@ -681,7 +684,7 @@ func (s Server) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{"items": expenses, "totalCount": totalCount})
+	writeJSON(w, http.StatusOK, map[string]any{"items": expenses, "totalCount": totalCount})
 }
 
 func (s Server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
@@ -749,4 +752,79 @@ func (s Server) handleListCategoryIcons(w http.ResponseWriter, r *http.Request) 
 	}
 
 	writeJSON(w, http.StatusOK, iconNames)
+}
+
+func (s Server) handleImportExpenses(w http.ResponseWriter, r *http.Request) {
+	userID := getAuthUserID(r)
+
+	accountID, err := strconv.ParseInt(chi.URLParam(r, "accountID"), 10, 0)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	data, err := reader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	existingCategories, err := s.store.GetCategoryNames(accountID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	rootCategoryID, err := s.store.GetRootCategoryID(accountID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	// Print the CSV data
+	for _, row := range data {
+		if row[0] == "" || row[2] == "" {
+			continue // empty line
+		}
+		date, err := time.Parse("02.01.2006", row[0])
+		if err != nil {
+			// TODO: handle error
+			continue
+		}
+
+		re := regexp.MustCompile("[0-9]+.?,?[0-9]+")
+		amount, err := strconv.ParseFloat(strings.Replace(re.FindString(row[2]), ",", ".", 1), 64)
+		if err != nil {
+			// TODO: handle error
+			continue
+		}
+		categoryName := strings.TrimSpace(row[1])
+		categoryID, ok := existingCategories[strings.ToLower(categoryName)]
+		if !ok {
+			category := models.NewCategory(userID, accountID, rootCategoryID, categoryName, "", "")
+			err = s.store.CreateCategory(category)
+			if err != nil {
+				// TODO: handle error
+				continue
+			}
+			categoryID = category.ID
+			existingCategories[strings.ToLower(categoryName)] = categoryID
+		}
+
+		expense := models.NewExpense(userID, accountID, categoryID, strings.TrimSpace(row[3]), int64(amount*100), date)
+		s.store.CreateExpense(expense)
+	}
+
+	// TODO: prevent entering the same expense multiple times
+	// TODO: return error lines
+	// TODO: add support for different currencies
+
+	writeJSON(w, http.StatusNoContent, "")
 }

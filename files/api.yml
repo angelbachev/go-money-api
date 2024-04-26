@@ -560,7 +560,33 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
-
+  /api/accounts/{accountId}/expenses/import:
+    post:
+      tags:
+        - Expenses
+      summary: Import expenses
+      operationId: importExpenses
+      parameters:
+        - name: accountId
+          in: path
+          description: ID of account for which we want to create expense
+          required: true
+          schema:
+            type: integer
+            format: int64  
+      requestBody:
+        description: Format of the file is Date (dd.mm.YYYY), CategoryName, Amount (25,14 лв.), Description
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: successful operation
+      security:
+        - bearerAuth: []
+            
   /api/users:
     post:
       tags:

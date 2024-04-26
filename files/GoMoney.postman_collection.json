@@ -659,6 +659,59 @@
 					"response": []
 				},
 				{
+					"name": "Import expenses",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"pm.collectionVariables.set(\"expenseId\", jsonData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/Angel/Downloads/Разходи 2023 .csv"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseApiUrl}}/accounts/{{accountId}}/expenses/import",
+							"host": [
+								"{{baseApiUrl}}"
+							],
+							"path": [
+								"accounts",
+								"{{accountId}}",
+								"expenses",
+								"import"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update expense",
 					"event": [
 						{
@@ -785,7 +838,7 @@
 								},
 								{
 									"key": "limit",
-									"value": "2",
+									"value": "10",
 									"disabled": true
 								}
 							]

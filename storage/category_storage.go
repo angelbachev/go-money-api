@@ -11,8 +11,9 @@ import (
 )
 
 type CategoryStore interface {
-	CreateCategory(cateory *models.Category) error
+	CreateCategory(category *models.Category) error
 	GetCategories(accountID int64) ([]int64, error)
+	GetCategoryNames(accountID int64) (map[string]int64, error)
 	GetCategoryByID(id int64) (*models.Category, error)
 	GetCategoryTree(accountID int64) (*models.CategoryTree, error)
 	GetSingleCategoryTree(id int64) (*models.CategoryTree, error)
@@ -74,6 +75,31 @@ func (s MySQLStore) GetCategories(accountID int64) ([]int64, error) {
 		categories = append(categories, category)
 	}
 	return categories, nil
+}
+
+func (s MySQLStore) GetCategoryNames(accountID int64) (map[string]int64, error) {
+	query := `SELECT id, name FROM categories WHERE account_id = ? AND name != ""`
+	rows, err := s.db.Query(query, accountID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	categoryNames := map[string]int64{}
+	for rows.Next() {
+		var name string
+		var id int64
+		err = rows.Scan(&id, &name)
+
+		if err != nil {
+			return nil, err
+		}
+
+		categoryNames[strings.ToLower(name)] = id
+	}
+	return categoryNames, nil
 }
 
 func (s MySQLStore) GetCategoryByID(id int64) (*models.Category, error) {
