@@ -4,8 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/angelbachev/go-money-api/api"
-	"github.com/angelbachev/go-money-api/storage"
+	auth_infrastructure "github.com/angelbachev/go-money-api/infrastructure/domain/auth"
+	"github.com/angelbachev/go-money-api/infrastructure/factory"
+	"github.com/angelbachev/go-money-api/presentation/api/rest"
 	"github.com/joho/godotenv"
 )
 
@@ -16,15 +17,20 @@ func init() {
 func main() {
 	addr := os.Getenv("LISTEN_ADDRESS")
 	if addr == "" {
-		addr = ":8089"
+		addr = ":80"
 	}
 
-	connStr := os.Getenv("MYSQL_CONNECTION_STRING")
-	store, err := storage.NewMySQLStore(connStr)
+	authService := *auth_infrastructure.NewJWTAuth(os.Getenv("JWT_SECRET"))
+
+	dbFactory, err := factory.NewMySQLRepositoryFactory(os.Getenv("MYSQL_CONNECTION_STRING"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer(addr, store)
+	commandHandlerFactory := factory.NewCommandHandlerFactory(dbFactory, authService)
+	queryHandlerFactory := factory.NewQueryHandlerFactory(dbFactory)
+	actionFactory := factory.NewActionFactory(commandHandlerFactory, queryHandlerFactory)
+
+	server := rest.NewServer(addr, authService, actionFactory.All())
 	server.Run()
 }

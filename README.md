@@ -23,3 +23,6 @@ Money tracking API written in Golang
 1. [] Add docker setup
 1. [] Add Redis
 1. [] Add Mailpit
+
+** Migrate category icons and files server/index page to new structure
+Add factories for creating repositories, handlers, actions
