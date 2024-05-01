@@ -1,6 +1,6 @@
 package account
 
-type AccountRepositoryInterface interface {
+type AccountRepository interface {
 	CreateAccount(account *Account) error
 	UpdateAccount(account *Account) error
 	GetAccountByID(userID, accountID int64) (*Account, error)

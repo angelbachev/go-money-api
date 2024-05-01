@@ -5,11 +5,11 @@ import (
 )
 
 type DeleteExpenseCommandHandler struct {
-	expenseRepository expense.ExpenseRepositoryInterface
+	expenseRepository expense.ExpenseRepository
 }
 
 func NewDeleteExpenseCommandHandler(
-	expenseRepository expense.ExpenseRepositoryInterface,
+	expenseRepository expense.ExpenseRepository,
 ) *DeleteExpenseCommandHandler {
 	return &DeleteExpenseCommandHandler{
 		expenseRepository: expenseRepository,

@@ -5,11 +5,11 @@ import (
 )
 
 type UpdateExpenseCommandHandler struct {
-	expenseRepository expense.ExpenseRepositoryInterface
+	expenseRepository expense.ExpenseRepository
 }
 
 func NewUpdateExpenseCommandHandler(
-	expenseRepository expense.ExpenseRepositoryInterface,
+	expenseRepository expense.ExpenseRepository,
 ) *UpdateExpenseCommandHandler {
 	return &UpdateExpenseCommandHandler{
 		expenseRepository: expenseRepository,

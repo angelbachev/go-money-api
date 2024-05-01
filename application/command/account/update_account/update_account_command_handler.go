@@ -5,11 +5,11 @@ import (
 )
 
 type UpdateAccountCommandHandler struct {
-	accountRepository account.AccountRepositoryInterface
+	accountRepository account.AccountRepository
 }
 
 func NewUpdateAccountCommandHandler(
-	accountRepository account.AccountRepositoryInterface,
+	accountRepository account.AccountRepository,
 ) *UpdateAccountCommandHandler {
 	return &UpdateAccountCommandHandler{
 		accountRepository: accountRepository,

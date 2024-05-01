@@ -10,13 +10,15 @@ Money tracking API written in Golang
 1. [x] Create default account on user registration
 1. [x] Create default categories on user registration
 1. [x] Add import expenses API.
+1. [x] Refactor to use DDD structure
+1. [x] Add factories for DI
 1. [] Add Validation.
 1. [] Send Registration/confirmation email.
 1. [] Add Forgotten password functionality (email + reset APIs).
 1. [] Add Expiry date to auth token.
 1. [] Add Refresh token API
 1. [] Add Logout API
-1. [] Add settings API (choose theme, default account, pagination)
+1. [x] Add settings API (choose theme, default account, pagination)
 1. [] Add support for shared/multi user account (invitation)
 1. [] Add tests
 1. [] Use uuids/slugs instead of int ids
@@ -24,5 +26,10 @@ Money tracking API written in Golang
 1. [] Add Redis
 1. [] Add Mailpit
 
-** Migrate category icons and files server/index page to new structure
-Add factories for creating repositories, handlers, actions
+Validation
+    * custom validators
+    * custom errors
+    * email, valid address / uniqueness
+    * password  - 8 symbols, 1 special symbol, 1 digit, 1 uppercase, 1 lowercase
+    * permissions - user can edit/delete/view only his accounts, categories and expenses
+

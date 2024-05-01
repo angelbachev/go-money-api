@@ -1,6 +1,6 @@
 package user
 
-type UserSettingsRepositoryInterface interface {
+type UserSettingsRepository interface {
 	CreateUserSettings(settings *UserSettings) error
 	UpdateUserSettings(settings *UserSettings) error
 	GetUserSettings(userID int64) (*UserSettings, error)

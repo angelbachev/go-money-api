@@ -8,14 +8,14 @@ import (
 )
 
 type CreateAuthTokenCommandHandler struct {
-	userRepository         user.UserRepositoryInterface
-	userSettingsRepository user.UserSettingsRepositoryInterface
+	userRepository         user.UserRepository
+	userSettingsRepository user.UserSettingsRepository
 	authService            auth.AuthService
 }
 
 func NewCreateAuthTokenCommandHandler(
-	userRepository user.UserRepositoryInterface,
-	userSettingsRepository user.UserSettingsRepositoryInterface,
+	userRepository user.UserRepository,
+	userSettingsRepository user.UserSettingsRepository,
 	authService auth.AuthService,
 ) *CreateAuthTokenCommandHandler {
 	return &CreateAuthTokenCommandHandler{

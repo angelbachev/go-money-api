@@ -12,13 +12,13 @@ import (
 )
 
 type ImportExpensesCommandHandler struct {
-	categoryRepository category.CategoryRepositoryInterface
-	expenseRepository  expense.ExpenseRepositoryInterface
+	categoryRepository category.CategoryRepository
+	expenseRepository  expense.ExpenseRepository
 }
 
 func NewImportExpensesCommandHandler(
-	categoryRepository category.CategoryRepositoryInterface,
-	expenseRepository expense.ExpenseRepositoryInterface,
+	categoryRepository category.CategoryRepository,
+	expenseRepository expense.ExpenseRepository,
 ) *ImportExpensesCommandHandler {
 	return &ImportExpensesCommandHandler{
 		categoryRepository: categoryRepository,

@@ -10,13 +10,13 @@ import (
 )
 
 type ActionFactory struct {
-	actions               map[string]rest.APIActionInterface
+	actions               map[string]rest.APIAction
 	commandHandlerFactory *CommandHandlerFactory
 	queryHandlerFactory   *QueryHandlerFactory
 }
 
 func NewActionFactory(commandHandlerFactory *CommandHandlerFactory, queryHandlerFactory *QueryHandlerFactory) *ActionFactory {
-	return &ActionFactory{actions: make(map[string]rest.APIActionInterface), commandHandlerFactory: commandHandlerFactory, queryHandlerFactory: queryHandlerFactory}
+	return &ActionFactory{actions: make(map[string]rest.APIAction), commandHandlerFactory: commandHandlerFactory, queryHandlerFactory: queryHandlerFactory}
 }
 
 func (f ActionFactory) CreateUserAction() *user.CreateUserAction {
@@ -227,8 +227,8 @@ func (f ActionFactory) ImportExpensesAction() *expense.ImportExpensesAction {
 	return f.actions["importExpensesAction"].(*expense.ImportExpensesAction)
 }
 
-func (f ActionFactory) All() []rest.APIActionInterface {
-	return []rest.APIActionInterface{
+func (f ActionFactory) All() []rest.APIAction {
+	return []rest.APIAction{
 		f.CreateUserAction(),
 		f.UpdateUserSettingsAction(),
 		f.GetUserSettingsAction(),

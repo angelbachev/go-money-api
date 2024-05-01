@@ -4,7 +4,7 @@ import "net/http"
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
 
-type APIActionInterface interface {
+type APIAction interface {
 	Method() string
 	Route() string
 	IsPublic() bool

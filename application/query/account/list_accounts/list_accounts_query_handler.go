@@ -5,11 +5,11 @@ import (
 )
 
 type ListAccountsQueryHandler struct {
-	accountRepository account.AccountRepositoryInterface
+	accountRepository account.AccountRepository
 }
 
 func NewListAccountsQueryHandler(
-	accountRepository account.AccountRepositoryInterface,
+	accountRepository account.AccountRepository,
 ) *ListAccountsQueryHandler {
 	return &ListAccountsQueryHandler{
 		accountRepository: accountRepository,

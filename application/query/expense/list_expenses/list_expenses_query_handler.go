@@ -6,13 +6,13 @@ import (
 )
 
 type ListExpensesQueryHandler struct {
-	categoryRepository category.CategoryRepositoryInterface
-	expenseRepository  expense.ExpenseRepositoryInterface
+	categoryRepository category.CategoryRepository
+	expenseRepository  expense.ExpenseRepository
 }
 
 func NewListExpensesQueryHandler(
-	categoryRepository category.CategoryRepositoryInterface,
-	expenseRepository expense.ExpenseRepositoryInterface,
+	categoryRepository category.CategoryRepository,
+	expenseRepository expense.ExpenseRepository,
 ) *ListExpensesQueryHandler {
 	return &ListExpensesQueryHandler{
 		categoryRepository: categoryRepository,
@@ -45,11 +45,20 @@ func (h ListExpensesQueryHandler) Handle(query ListExpensesQuery) (*ListExpenses
 		return nil, err
 	}
 
+	// TODO: refactor to optimize queries (reduce their number)
+	var formattedExpenses []*ExpenseResponse
+	for _, exp := range expenses {
+		c, err := h.categoryRepository.GetCategoryByID(exp.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		formattedExpenses = append(formattedExpenses, NewExpenseResponse(exp, c.Name))
+	}
+
 	totalCount, err := h.expenseRepository.GetExpensesCount(query.UserID, query.AccountID, filters)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewListExpensesResponse(expenses, totalCount), nil
-
+	return NewListExpensesResponse(formattedExpenses, totalCount), nil
 }

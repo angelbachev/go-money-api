@@ -24,6 +24,3 @@ revert-db: ## Revert db migrations
 
 build-seed: ## Build seed
 	@go build -o bin/seed ./cmd/seed/main.go
-
-seed: build-seed ## Seed data
-	@./bin/seed

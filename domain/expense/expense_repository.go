@@ -1,6 +1,6 @@
 package expense
 
-type ExpenseRepositoryInterface interface {
+type ExpenseRepository interface {
 	CreateExpense(cateory *Expense) error
 	GetExpenses(userID, accountID int64, filters *ExpenseFilters, page, limit int64) ([]*Expense, error)
 	GetExpensesCount(userID, accountID int64, filters *ExpenseFilters) (int64, error)

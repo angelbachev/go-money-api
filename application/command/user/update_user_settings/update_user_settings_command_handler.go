@@ -5,11 +5,11 @@ import (
 )
 
 type UpdateUserSettingsCommandHandler struct {
-	userSettingsRepository user.UserSettingsRepositoryInterface
+	userSettingsRepository user.UserSettingsRepository
 }
 
 func NewUpdateUserSettingsCommandHandler(
-	userSettingsRepository user.UserSettingsRepositoryInterface,
+	userSettingsRepository user.UserSettingsRepository,
 ) *UpdateUserSettingsCommandHandler {
 	return &UpdateUserSettingsCommandHandler{
 		userSettingsRepository: userSettingsRepository,

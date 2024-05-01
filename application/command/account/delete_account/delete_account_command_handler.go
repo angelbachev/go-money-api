@@ -9,15 +9,15 @@ import (
 )
 
 type DeleteAccountCommandHandler struct {
-	accountRepository  account.AccountRepositoryInterface
-	categoryRepository category.CategoryRepositoryInterface
-	expenseRepository  expense.ExpenseRepositoryInterface
+	accountRepository  account.AccountRepository
+	categoryRepository category.CategoryRepository
+	expenseRepository  expense.ExpenseRepository
 }
 
 func NewDeleteAccountCommandHandler(
-	accountRepository account.AccountRepositoryInterface,
-	categoryRepository category.CategoryRepositoryInterface,
-	expenseRepository expense.ExpenseRepositoryInterface,
+	accountRepository account.AccountRepository,
+	categoryRepository category.CategoryRepository,
+	expenseRepository expense.ExpenseRepository,
 ) *DeleteAccountCommandHandler {
 	return &DeleteAccountCommandHandler{
 		accountRepository:  accountRepository,

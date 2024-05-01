@@ -9,17 +9,17 @@ import (
 )
 
 type CreateUserCommandHandler struct {
-	userRepository         user.UserRepositoryInterface
-	userSettingsRepository user.UserSettingsRepositoryInterface
-	accountRepository      account.AccountRepositoryInterface
-	categoryRepository     category.CategoryRepositoryInterface
+	userRepository         user.UserRepository
+	userSettingsRepository user.UserSettingsRepository
+	accountRepository      account.AccountRepository
+	categoryRepository     category.CategoryRepository
 }
 
 func NewCreateUserCommandHandler(
-	userRepository user.UserRepositoryInterface,
-	userSettingsRepository user.UserSettingsRepositoryInterface,
-	accountRepository account.AccountRepositoryInterface,
-	categoryRepository category.CategoryRepositoryInterface,
+	userRepository user.UserRepository,
+	userSettingsRepository user.UserSettingsRepository,
+	accountRepository account.AccountRepository,
+	categoryRepository category.CategoryRepository,
 ) *CreateUserCommandHandler {
 	return &CreateUserCommandHandler{
 		userRepository:         userRepository,

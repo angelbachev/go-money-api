@@ -1,6 +1,6 @@
 package category
 
-type CategoryRepositoryInterface interface {
+type CategoryRepository interface {
 	CreateCategory(category *Category) error
 	GetCategories(accountID int64) ([]int64, error)
 	GetCategoryNames(accountID int64) (map[string]int64, error)

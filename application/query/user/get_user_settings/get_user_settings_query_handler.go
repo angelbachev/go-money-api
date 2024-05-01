@@ -5,11 +5,11 @@ import (
 )
 
 type GetUserSettingsQueryHandler struct {
-	userSettingsRepository user.UserSettingsRepositoryInterface
+	userSettingsRepository user.UserSettingsRepository
 }
 
 func NewGetUserSettingsQueryHandler(
-	userSettingsRepository user.UserSettingsRepositoryInterface,
+	userSettingsRepository user.UserSettingsRepository,
 ) *GetUserSettingsQueryHandler {
 	return &GetUserSettingsQueryHandler{
 		userSettingsRepository: userSettingsRepository,

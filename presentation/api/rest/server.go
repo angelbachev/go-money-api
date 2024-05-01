@@ -17,11 +17,11 @@ import (
 
 type Server struct {
 	listenAddr string
-	actions    []APIActionInterface
+	actions    []APIAction
 	auth       auth.JWTAuthService
 }
 
-func NewServer(listenAddr string, auth auth.JWTAuthService, actions []APIActionInterface) *Server {
+func NewServer(listenAddr string, auth auth.JWTAuthService, actions []APIAction) *Server {
 	return &Server{
 		listenAddr: listenAddr,
 		auth:       auth,
